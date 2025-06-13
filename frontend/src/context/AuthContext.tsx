@@ -1,5 +1,8 @@
 import { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 interface User {
   id: string;
@@ -28,17 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      // TODO: Implement actual login API call
-      // For now, just simulate a successful login
-      const mockUser: User = {
-        id: '1',
-        name: 'Test User',
-        email,
-        userType: 'passenger',
-      };
-      setUser(mockUser);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during login');
+      const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+      const { token, user: userData } = response.data;
+      localStorage.setItem('token', token);
+      setUser(userData);
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || 'An error occurred during login');
     } finally {
       setIsLoading(false);
     }
@@ -48,23 +46,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      // TODO: Implement actual registration API call
-      // For now, just simulate a successful registration
-      const mockUser: User = {
-        id: '1',
-        name,
-        email,
-        userType,
-      };
-      setUser(mockUser);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during registration');
+      const response = await axios.post(`${API_URL}/api/auth/register`, { name, email, password, userType });
+      const { token, user: userData } = response.data;
+      localStorage.setItem('token', token);
+      setUser(userData);
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || 'An error occurred during registration');
     } finally {
       setIsLoading(false);
     }
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     setUser(null);
   };
 
